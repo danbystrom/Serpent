@@ -50,13 +50,13 @@ namespace Serpent
             _locationFrom = Point.Zero;
             _locationTo = _locationFrom.Add(_diff);
 
-            _headRotation.Add(Direction.East,
-                              Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(MathHelper.Pi));
             _headRotation.Add(Direction.West,
+                              Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(MathHelper.Pi));
+            _headRotation.Add(Direction.East,
                               Matrix.CreateRotationY(MathHelper.PiOver2));
-            _headRotation.Add(Direction.North,
-                              Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(MathHelper.PiOver2));
             _headRotation.Add(Direction.South,
+                              Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(MathHelper.PiOver2));
+            _headRotation.Add(Direction.North,
                               Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(-MathHelper.PiOver2));
 
             _tail = new SerpentTailSegment(_pf,Point.Zero);

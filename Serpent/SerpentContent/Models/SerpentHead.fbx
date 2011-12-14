@@ -10,10 +10,10 @@ FBXHeaderExtension:  {
 		Version: 1000
 		Year: 2011
 		Month: 12
-		Day: 06
-		Hour: 14
-		Minute: 18
-		Second: 45
+		Day: 09
+		Hour: 15
+		Minute: 55
+		Second: 11
 		Millisecond: 0
 	}
 	Creator: "FBX SDK/FBX Plugins build 20070228"
@@ -21,7 +21,7 @@ FBXHeaderExtension:  {
 		FlagPLE: 0
 	}
 }
-CreationTime: "2011-12-06 14:18:45:000"
+CreationTime: "2011-12-09 15:55:11:000"
 Creator: "Blender version 2.60 (sub 0)"
 
 ; Object definitions
@@ -405,9 +405,9 @@ Objects:  {
 		Properties60:  {
 			Property: "QuaternionInterpolate", "bool", "",0
 			Property: "Visibility", "Visibility", "A+",1
-			Property: "Lcl Translation", "Lcl Translation", "A+",0.486543416976929,0.578648030757904,-0.898153901100159
+			Property: "Lcl Translation", "Lcl Translation", "A+",0.566380143165588,0.578648030757904,0.768073797225952
 			Property: "Lcl Rotation", "Lcl Rotation", "A+",-90.000009334538021,0.000000000000000,0.000000000000000
-			Property: "Lcl Scaling", "Lcl Scaling", "A+",0.144707202911377,0.144707202911377,0.144707202911377
+			Property: "Lcl Scaling", "Lcl Scaling", "A+",0.314102023839951,0.314102023839951,0.314102023839951
 			Property: "RotationOffset", "Vector3D", "",0,0,0
 			Property: "RotationPivot", "Vector3D", "",0,0,0
 			Property: "ScalingOffset", "Vector3D", "",0,0,0
@@ -881,9 +881,9 @@ Objects:  {
 		Properties60:  {
 			Property: "QuaternionInterpolate", "bool", "",0
 			Property: "Visibility", "Visibility", "A+",1
-			Property: "Lcl Translation", "Lcl Translation", "A+",-0.487689375877380,0.578648030757904,-0.898153901100159
+			Property: "Lcl Translation", "Lcl Translation", "A+",-0.569893240928650,0.578648030757904,0.768073797225952
 			Property: "Lcl Rotation", "Lcl Rotation", "A+",-90.000009334538021,0.000000000000000,0.000000000000000
-			Property: "Lcl Scaling", "Lcl Scaling", "A+",0.144707202911377,0.144707202911377,0.144707202911377
+			Property: "Lcl Scaling", "Lcl Scaling", "A+",0.314102023839951,0.314102023839951,0.314102023839951
 			Property: "RotationOffset", "Vector3D", "",0,0,0
 			Property: "RotationPivot", "Vector3D", "",0,0,0
 			Property: "ScalingOffset", "Vector3D", "",0,0,0
@@ -2855,11 +2855,11 @@ Objects:  {
 		NbPoseNodes: 3
 		PoseNode:  {
 			Node: "Model::Sphere_002"
-			Matrix: 0.144707202911377,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,-0.144707202911377,0.000000000000000,0.000000000000000,0.144707202911377,0.000000000000000,0.000000000000000,0.486543416976929,0.578648030757904,-0.898153901100159,1.000000000000000
+			Matrix: 0.314102023839951,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,-0.314102023839951,0.000000000000000,0.000000000000000,0.314102023839951,0.000000000000000,0.000000000000000,0.566380143165588,0.578648030757904,0.768073797225952,1.000000000000000
 		}
 		PoseNode:  {
 			Node: "Model::Sphere_001"
-			Matrix: 0.144707202911377,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,-0.144707202911377,0.000000000000000,0.000000000000000,0.144707202911377,0.000000000000000,0.000000000000000,-0.487689375877380,0.578648030757904,-0.898153901100159,1.000000000000000
+			Matrix: 0.314102023839951,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,-0.314102023839951,0.000000000000000,0.000000000000000,0.314102023839951,0.000000000000000,0.000000000000000,-0.569893240928650,0.578648030757904,0.768073797225952,1.000000000000000
 		}
 		PoseNode:  {
 			Node: "Model::Sphere"
@@ -2950,11 +2950,11 @@ Takes:  {
 			Channel: "Transform" {
 				Channel: "T" {
 					Channel: "X" {
-						Default: 0.486543416976929
+						Default: 0.566380143165588
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,0.486543416976929,L
+							1924423250,0.566380143165588,L
 						Color: 1,0,0
 					}
 					Channel: "Y" {
@@ -2966,11 +2966,11 @@ Takes:  {
 						Color: 0,1,0
 					}
 					Channel: "Z" {
-						Default: -0.898153901100159
+						Default: 0.768073797225952
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,-0.898153901100159,L
+							1924423250,0.768073797225952,L
 						Color: 0,0,1
 					}
 					LayerType: 1
@@ -3004,27 +3004,27 @@ Takes:  {
 				}
 				Channel: "S" {
 					Channel: "X" {
-						Default: 0.144707202911377
+						Default: 0.314102023839951
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,0.144707202911377,L
+							1924423250,0.314102023839951,L
 						Color: 1,0,0
 					}
 					Channel: "Y" {
-						Default: 0.144707202911377
+						Default: 0.314102023839951
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,0.144707202911377,L
+							1924423250,0.314102023839951,L
 						Color: 0,1,0
 					}
 					Channel: "Z" {
-						Default: 0.144707202911377
+						Default: 0.314102023839951
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,0.144707202911377,L
+							1924423250,0.314102023839951,L
 						Color: 0,0,1
 					}
 					LayerType: 3
@@ -3036,11 +3036,11 @@ Takes:  {
 			Channel: "Transform" {
 				Channel: "T" {
 					Channel: "X" {
-						Default: -0.487689375877380
+						Default: -0.569893240928650
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,-0.487689375877380,L
+							1924423250,-0.569893240928650,L
 						Color: 1,0,0
 					}
 					Channel: "Y" {
@@ -3052,11 +3052,11 @@ Takes:  {
 						Color: 0,1,0
 					}
 					Channel: "Z" {
-						Default: -0.898153901100159
+						Default: 0.768073797225952
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,-0.898153901100159,L
+							1924423250,0.768073797225952,L
 						Color: 0,0,1
 					}
 					LayerType: 1
@@ -3090,27 +3090,27 @@ Takes:  {
 				}
 				Channel: "S" {
 					Channel: "X" {
-						Default: 0.144707202911377
+						Default: 0.314102023839951
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,0.144707202911377,L
+							1924423250,0.314102023839951,L
 						Color: 1,0,0
 					}
 					Channel: "Y" {
-						Default: 0.144707202911377
+						Default: 0.314102023839951
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,0.144707202911377,L
+							1924423250,0.314102023839951,L
 						Color: 0,1,0
 					}
 					Channel: "Z" {
-						Default: 0.144707202911377
+						Default: 0.314102023839951
 						KeyVer: 4005
 						KeyCount: 1
 						Key: 
-							1924423250,0.144707202911377,L
+							1924423250,0.314102023839951,L
 						Color: 0,0,1
 					}
 					LayerType: 3
