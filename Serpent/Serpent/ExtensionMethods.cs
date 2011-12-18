@@ -16,5 +16,9 @@ namespace Serpent
         {
             return new Point(p1.X + x, p1.Y + y);
         }
+        public static Point Add(this Point p1, Direction dir)
+        {
+            return p1.Add(dir.DirectionAsPoint());
+        }
     }
 }

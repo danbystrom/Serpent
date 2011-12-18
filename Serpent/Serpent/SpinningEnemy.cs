@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Serpent
 {
-    class SpinningEnemy : BasicModel
+    class SpinningEnemy : SunflowersModel
     {
         Matrix rotation = Matrix.Identity;
 

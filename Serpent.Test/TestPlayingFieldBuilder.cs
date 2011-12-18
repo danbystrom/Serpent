@@ -107,5 +107,35 @@ namespace Serpent.Test
             Assert.AreEqual(field[1, 0, 4].Corners, new[] { -1, -1, 0, 0 });
         }
 
+        [Test]
+        public void TestSlope4()
+        {
+            var field = new PlayingFieldSquare[2, 6, 1];
+            var builder = new PlayingFieldBuilder(field);
+            builder.ConstructOneFloor(0, new[]
+                                             {
+                                                 " ",
+                                                 " ",
+                                                 "U",
+                                                 "U",
+                                                 "U",
+                                                 "X",
+                                             }
+                );
+            builder.ConstructOneFloor(1, new[]
+                                             {
+                                                 "X",
+                                                 "D",
+                                                 " ",
+                                                 " ",
+                                                 " ",
+                                                 " ",
+                                             }
+                );
+            Assert.IsTrue(field[1, 0, 4].IsPortal);
+            Assert.AreEqual(field[1, 0, 4].Corners, new[] { -1, -1, 0, 0 });
+        }
+
+
     }
 }

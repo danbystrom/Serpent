@@ -32,8 +32,9 @@ namespace Serpent
 
         protected override void LoadContent()
         {
-            //Add models to list
-            _models.Add(new BasicModel(
+            _models.Add(new TreesModel(
+                Game.Content.Load<Model>(@"models\tree1")));
+            _models.Add(new SunflowersModel(
                 Game.Content.Load<Model>(@"models\sunflower3")));
 
             base.LoadContent();
@@ -46,7 +47,7 @@ namespace Serpent
         public override void Update(GameTime gameTime)
         {
             // Loop through all models and call Update
-            foreach (BasicModel t in _models)
+            foreach (var t in _models)
             {
                 t.Update();
             }

@@ -15,6 +15,15 @@ namespace Serpent
         Forward
     }
 
+    public enum DirectionValue
+    {
+        None = 0,
+        South = 1,
+        West = 2,
+        North = 3,
+        East = 4
+    }
+
     public struct Direction
     {
         public static readonly Direction[] AllDirections;
@@ -25,19 +34,19 @@ namespace Serpent
         public static readonly Direction North;
         public static readonly Direction East;
 
-        private readonly int _dir;
+        private readonly DirectionValue _dir;
 
         static Direction()
         {
-            None = new Direction(0);
-            South = new Direction(1);
-            West = new Direction(2);
-            North = new Direction(3);
-            East = new Direction(4);
+            None = new Direction(DirectionValue.None);
+            South = new Direction(DirectionValue.South);
+            West = new Direction(DirectionValue.West);
+            North = new Direction(DirectionValue.North);
+            East = new Direction(DirectionValue.East);
             AllDirections = new[] {South, West, North, East};
         }
 
-        private Direction( int dir )
+        private Direction( DirectionValue dir )
         {
             _dir = dir;
         }
@@ -46,7 +55,8 @@ namespace Serpent
         {
             if (_dir == 0)
                 return None;
-            return new Direction(1+((_dir+(int)rd-1) & 3));
+            var dir = 1 + (((int) _dir + (int) rd - 1) & 3);
+            return new Direction((DirectionValue)dir);
         }
 
         public Direction Right
@@ -73,7 +83,7 @@ namespace Serpent
                            new Point( -1, 0), 
                            new Point( 0, 1), 
                            new Point( 1, 0), 
-                       }[_dir];
+                       }[(int)_dir];
         }
 
         public Vector2 DirectionAsVector2()
@@ -105,12 +115,12 @@ namespace Serpent
 
         public override int GetHashCode()
         {
-            return _dir;
+            return (int)_dir;
         }
 
         public override string ToString()
         {
-            return new[] {"South", "West", "North", "East"}[_dir];
+            return new[] {"South", "West", "North", "East"}[(int)_dir];
         }
 
     }

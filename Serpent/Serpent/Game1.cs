@@ -16,25 +16,20 @@ namespace Serpent
     /// </summary>
     public class Game1 : Microsoft.Xna.Framework.Game
     {
-        // Game camera
-        Camera _camera;
-
         // Vertex data
-        VertexBuffer _vertexBuffer1;
         private PlayingField _playingField;
 
-        // Movement and rotation stuff
-        Matrix _worldRotation = Matrix.Identity;
-
-        private Serpent _serpent;
-        private Serpent _serpentEnemy;
+        private PlayerSerpent _serpent;
+        private EnemySerpent _serpentEnemy;
 
         private ModelManager _modelManager;
+        private GraphicsDeviceManager _graphics;
 
         public Game1()
         {
-            new GraphicsDeviceManager(this);
+            _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            _graphics.IsFullScreen = true;
         }
 
         /// <summary>
@@ -45,37 +40,39 @@ namespace Serpent
         /// </summary>
         protected override void Initialize()
         {
-            // Initialize camera
-            _camera = new Camera(
-                this,
-                new Vector3(0, 20, 2),
-                Vector3.Zero,
-                Vector3.Up);
-            Components.Add(_camera);
-
             var texture = Content.Load<Texture2D>(@"Textures\grass");
             _playingField = new PlayingField(
                 GraphicsDevice,
-                _camera,
                 texture,
                 2, 20, 20);
 
-            _serpent = new Serpent(this,
+            _serpent = new PlayerSerpent(this,
                     _playingField,
                     Content.Load<Model>(@"Models\SerpentHead"),
-                    Content.Load<Model>(@"Models\serpentsegment"),
-                    _camera);
+                    Content.Load<Model>(@"Models\serpentsegment"));
             Components.Add(_serpent);
-            _camera._serpent = _serpent;
+            Components.Add(_serpent.Camera);
 
             _serpentEnemy = new EnemySerpent(this,
                 _playingField,
                 Content.Load<Model>(@"Models\SerpentHead"),
                 Content.Load<Model>(@"Models\serpentsegment"),
-                _camera);
+                _serpent.Camera,0);
+            Components.Add(_serpentEnemy);
+            _serpentEnemy = new EnemySerpent(this,
+                _playingField,
+                Content.Load<Model>(@"Models\SerpentHead"),
+                Content.Load<Model>(@"Models\serpentsegment"),
+                _serpent.Camera,1);
+            Components.Add(_serpentEnemy);
+            _serpentEnemy = new EnemySerpent(this,
+                _playingField,
+                Content.Load<Model>(@"Models\SerpentHead"),
+                Content.Load<Model>(@"Models\serpentsegment"),
+                _serpent.Camera,2);
             Components.Add(_serpentEnemy);
 
-            _modelManager = new ModelManager(this, _camera);
+            _modelManager = new ModelManager(this, _serpent.Camera);
             Components.Add(_modelManager);
 
             base.Initialize();
@@ -110,12 +107,6 @@ namespace Serpent
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            // Rotation
-            _worldRotation *= Matrix.CreateFromYawPitchRoll(
-                MathHelper.PiOver4 / (60 * 10),
-                0,
-                0);
-
             base.Update(gameTime);
         }
 
@@ -126,7 +117,7 @@ namespace Serpent
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            _playingField.Draw();
+            _playingField.Draw(_serpent.Camera);
             base.Draw(gameTime);
         }
     }

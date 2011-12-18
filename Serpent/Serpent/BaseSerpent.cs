@@ -8,47 +8,39 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Serpent
 {
-    public class Serpent : DrawableGameComponent
+    public abstract class BaseSerpent : DrawableGameComponent
     {
         private readonly PlayingField _pf;
-        private Point _locationTo;
-        private Point _locationFrom;
-        private int _floor;
-        protected Point _diff; // this is were we're heading (0,0),(1,0),(-1,0),(0,1),(0,-1)
-        protected Direction _direction;
 
-        private float _fraction;
+        protected Whereabouts _whereabouts = new Whereabouts();
+        protected Camera _camera;
+
         private double _fractionAngle;
-
-        private RelativeDirection _nextKbdDirection;
 
         private readonly Model _modelHead;
         private readonly Model _modelSegment;
-        private readonly Camera _camera;
 
         private VertexBuffer _vb;
 
         private SerpentTailSegment _tail;
 
-        private Dictionary<Direction, Matrix> _headRotation = new Dictionary<Direction, Matrix>();
+        private readonly Dictionary<Direction, Matrix> _headRotation = new Dictionary<Direction, Matrix>();
 
-        public Serpent(
+        protected abstract void takeDirection();
+
+        protected BaseSerpent(
             Game game,
             PlayingField pf,
             Model modelHead,
-            Model modelSegment,
-            Camera camera)
+            Model modelSegment)
             : base(game)
         {
             _pf = pf;
             _modelHead = modelHead;
             _modelSegment = modelSegment;
-            _camera = camera;
-
-            _direction = Direction.East;
-            _diff = _direction.DirectionAsPoint();
-            _locationFrom = Point.Zero;
-            _locationTo = _locationFrom.Add(_diff);
+            
+            _headDirection  = _whereabouts.Direction = Direction.East;
+            _whereabouts.Location = Point.Zero;
 
             _headRotation.Add(Direction.West,
                               Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(MathHelper.Pi));
@@ -73,18 +65,16 @@ namespace Serpent
 
         public override void Update(GameTime gameTime)
         {
-            checkKeyboardForDirection();
-
-            if (_diff != Point.Zero)
+            if (_whereabouts.Direction != Direction.None )
             {
                 _fractionAngle += gameTime.ElapsedGameTime.TotalMilliseconds*0.003;
                 if (_fractionAngle >= 1)
                 {
                     _fractionAngle = 0;
-                    _locationFrom = _locationTo;
+                    _whereabouts.Location = _whereabouts.NextLocation;
                     takeDirection();
                 }
-                _fraction = (float) Math.Sin(_fractionAngle*MathHelper.PiOver2);
+                _whereabouts.Fraction = (float) Math.Sin(_fractionAngle*MathHelper.PiOver2);
             }
             else
                 takeDirection();
@@ -92,41 +82,23 @@ namespace Serpent
             if (_tail != null)
                 _tail.Update(gameTime, GetPosition());
 
+            if (_whereabouts.Direction != Direction.None)
+                _headDirection = _whereabouts.Direction;
+
             base.Update(gameTime);
         }
 
-        private KeyboardState _lastKbdState;
-
-        private void checkKeyboardForDirection()
-        {
-            var keyboardState = Keyboard.GetState();
-            if (keyboardState.IsKeyDown(Keys.Left))
-                _nextKbdDirection = RelativeDirection.Left;
-            else if (keyboardState.IsKeyDown(Keys.Right))
-                _nextKbdDirection = RelativeDirection.Right;
-            else if (keyboardState.IsKeyDown(Keys.Down) && !_lastKbdState.IsKeyDown(Keys.Down))
-                _nextKbdDirection = RelativeDirection.Backward;
-            _lastKbdState = keyboardState;
-        }
-
-        protected virtual void takeDirection()
-        {
-            if ( !tryMove(_direction.Turn(_nextKbdDirection)))
-                if (!tryMove(_direction))
-                    _diff = Point.Zero;
-            _nextKbdDirection = RelativeDirection.None;
-        }
+        private Direction _headDirection;
 
         protected bool tryMove(Direction dir)
         {
-            var p = dir.DirectionAsPoint();
-            var possibleLocationTo = _locationFrom.Add(p);
-            if (!_pf.CanMoveHere(ref _floor, _locationFrom, possibleLocationTo))
+            if (dir == Direction.None)
                 return false;
-            _direction = dir;
-            _diff = p;
-            _locationTo = possibleLocationTo;
-            _tail.AddPathToWalk(_locationFrom);
+            var possibleLocationTo = _whereabouts.Location.Add(dir);
+            if (!_pf.CanMoveHere(ref _whereabouts.Floor, _whereabouts.Location, possibleLocationTo))
+                return false;
+            _whereabouts.Direction = dir;
+            _tail.AddPathToWalk(_whereabouts.Location);
             return true;
         }
 
@@ -137,11 +109,11 @@ namespace Serpent
                 _modelHead,
                 new[]
                     {
-                        _headRotation[Direction]*
+                        _headRotation[_headDirection]*
                         Matrix.CreateScale(0.5f)*
                         Matrix.CreateTranslation(
                             0.5f + p.X,
-                            0.4f + _pf.GetElevation(_direction, _floor, _locationTo, _fraction),
+                            0.4f + _pf.GetElevation(_whereabouts),
                             0.5f + p.Y)
                     });
 
@@ -153,13 +125,13 @@ namespace Serpent
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
                         0.5f + (p.X + p2.X)/2,
-                        0.3f + _pf.GetElevation(_direction, _floor, _locationTo, _fraction),
+                        0.3f + _pf.GetElevation(_whereabouts),
                         0.5f + (p.Y + p2.Y) / 2));
                 worlds.Add(
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
                         0.5f + p2.X,
-                        0.3f + _pf.GetElevation(_direction, _floor, _locationTo, _fraction),
+                        0.3f + _pf.GetElevation(_whereabouts),
                         0.5f + p2.Y));
                 p = p2;
             }
@@ -188,27 +160,36 @@ namespace Serpent
 
         public Vector2 GetPosition()
         {
+            var d = _whereabouts.Direction.DirectionAsPoint();
             return new Vector2(
-                _locationFrom.X + _diff.X*_fraction,
-                _locationFrom.Y + _diff.Y*_fraction);
+                _whereabouts.Location.X + d.X * _whereabouts.Fraction,
+                _whereabouts.Location.Y + d.Y * _whereabouts.Fraction);
         }
 
         public Vector3 LookAtPosition
         {
             get
             {
+                var d = _whereabouts.Direction.DirectionAsPoint();
                 return new Vector3(
-                    _locationFrom.X + _diff.X*(float) _fractionAngle,
-                    _pf.GetElevation(_direction,_floor,_locationTo,(float)_fractionAngle),
-                    _locationFrom.Y + _diff.Y*(float) _fractionAngle);
+                    _whereabouts.Location.X + d.X * (float)_fractionAngle,
+                    _pf.GetElevation(_whereabouts),
+                    _whereabouts.Location.Y + d.Y * (float)_fractionAngle);
             }
         }
 
         public Direction Direction
         {
-            get { return _direction; }
+            get { return _headDirection; }
         }
 
+        public void HitTest( Whereabouts where )
+        {
+            if ( _whereabouts.DistanceSquared(where,_pf) < 1 )
+            {
+                
+            }
+        }
     }
 
 }

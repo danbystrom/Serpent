@@ -12,13 +12,14 @@ namespace Serpent
         public Matrix View { get; protected set; }
         public Matrix Projection { get; protected set; }
 
-        public Serpent _serpent;
+        private readonly BaseSerpent _serpent;
 
         private Vector3 _position;
 
-        public Camera(Game game, Vector3 pos, Vector3 target, Vector3 up)
+        public Camera(Game game, PlayerSerpent serpent, Vector3 pos, Vector3 target, Vector3 up)
             : base(game)
         {
+            _serpent = serpent;
             // Initialize view matrix
             View = Matrix.CreateLookAt(pos, target, up);
 
@@ -51,12 +52,12 @@ namespace Serpent
             var t2 = new Vector2(target.X, target.Z);
             var qaz = this.moveTo(
                 t2,
-                t2 - _serpent.Direction.DirectionAsVector2() * 7,
+                t2 - _serpent.Direction.DirectionAsVector2() * 9,
                 gameTime.ElapsedGameTime.TotalMilliseconds);
  
             _position = new Vector3(
                 qaz.X,
-                target.Y + 4,
+                target.Y + 5,
                 qaz.Y );
 
             View = Matrix.CreateLookAt(

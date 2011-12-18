@@ -13,16 +13,14 @@ namespace Serpent
         public readonly PlayingFieldSquare[, ,] TheField;
 
         private readonly BasicEffect _effect;
-        private readonly Camera _camera;
         private readonly Texture2D _texture;
 
-        public PlayingField(GraphicsDevice graphicsDevice, Camera camera, Texture2D texture, int floors, int width, int height)
+        public PlayingField(GraphicsDevice graphicsDevice, Texture2D texture, int floors, int width, int height)
         {
             _effect = new BasicEffect(graphicsDevice);
-            _camera = camera;
             _texture = texture;
 
-            Floors = floors;
+            Floors = floors = 4;
             Width = width;
             Height = height;
             TheField = new PlayingFieldSquare[Floors, height, width];
@@ -32,8 +30,33 @@ namespace Serpent
                 0,
                 new[]
                     {
-                        "XXXXXXXXXXXXXXXXXXXX",
-                        "X   X              X",
+                        "XUUU                ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                UUUX"
+                    });
+            builder.ConstructOneFloor(
+                1,
+                new[]
+                    {
+                        "    DXXXXXXXXXXXXXXX",
+                        "       X           X",
                         "XXXXXXXXXXXXXXXXXXXX",
                         "X X X  X           X",
                         "X X X  X           X",
@@ -48,13 +71,13 @@ namespace Serpent
                         "X               X  X",
                         "XXXXXXXXXXXXXX  X  X",
                         "X            XXXXXXX",
-                        "X    U       X X   X",
-                        "X    U       XXX   X",
-                        "X    U        X    X",
-                        "XXXXXXXXXXXXXXXXXXXX"
+                        "X    U       X X    ",
+                        "X    U       XXX    ",
+                        "X    U        X     ",
+                        "XXXXXXXXXXXXXXXD    "
                     });
             builder.ConstructOneFloor(
-                1,
+                2,
                 new[]
                     {
                         "                    ",
@@ -65,9 +88,9 @@ namespace Serpent
                         "  XXXX     DXXXXXX  ",
                         "     X           X  ",
                         "    DXXXXXXXXXXXXX  ",
-                        "     X           X  ",
-                        "  XXXXXXXXXXXXXXXX  ",
-                        "  X X X X           ",
+                        "     X       X U    ",
+                        "  XXXXXXXXXXXX U    ",
+                        "  X X X X      U    ",
                         "  XXX XXX           ",
                         "   X   X            ",
                         "   XX XX            ",
@@ -78,12 +101,37 @@ namespace Serpent
                         "                    ",
                         "                    ",
                     });
+            builder.ConstructOneFloor(
+                3,
+                new[]
+                    {
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "                    ",
+                        "               D    ",
+                        "XXXXXXXXXXXXXXXXXXXX",
+                        "   X   X   X   X   X",
+                        "X  X XXX XXX XXX XXX",
+                        "XX X   X   X   X   X",
+                        "XXXX XXX   X   X XXX",
+                        "X XX   X   X   X   X",
+                        "X  X XXX   X   X XXX",
+                        "                    "
+                    });
 
             var verts = new List<VertexPositionNormalTexture>();
             var vertsShadow = new List<VertexPositionColor>();
-            for (var z = 0; z < 2; z++)
-                for (var y = 0; y < height; y++ )
-                     for (var x = 0; x < width; x++)
+            for (var z = 0; z < Floors; z++)
+                for (var y = 0; y < Height; y++ )
+                     for (var x = 0; x < Width; x++)
                         if (!TheField[z, y, x].IsNone )
                         {
                             var start = x;
@@ -123,27 +171,39 @@ namespace Serpent
         private void addVertex(
             IList<VertexPositionNormalTexture> verts,
             IList<VertexPositionColor> vertsShadow,
+            int floor,
             int z,
-            int zh,
             int x,
             int y,
             int w,
             int h)
         {
             verts.Add(new VertexPositionNormalTexture(
-                new Vector3((x+w), (z+zh) / 3f, (y+h)),
+                new Vector3((x+w), (floor+z) / 3f, (y+h)),
                 Vector3.Up,
                 new Vector2((x+w)/2f, (y+h)/2f)));
+
+            var dx = w == 0 ? -1 : 1;
+            var dy = h == 0 ? -1 : 1;
+            float fx = x;
+            float fy = y;
+            var tmpFloor = floor;
+            if (!CanMoveHere(ref tmpFloor, new Point(x,y), new Point(x+dx, y)))
+                fx += dx/20f;
+            tmpFloor = floor;
+            if (!CanMoveHere(ref tmpFloor, new Point(x, y), new Point(x, y+dy)))
+                fy += dy/20f;
+
             vertsShadow.Add(new VertexPositionColor(
-                new Vector3(x - (w == 0 ? 0.1f : -0.1f), (z+zh) / 3f - 0.01f, y - (h == 0 ? 0.1f : -0.1f)),
+                new Vector3(fx+w, (floor+z) / 3f - 0.05f, fy+h),
                 Color.Black));
         }
 
-        public void Draw()
+        public void Draw( Camera camera )
         {
             //Set object and camera info
-            _effect.View = _camera.View;
-            _effect.Projection = _camera.Projection;
+            _effect.View = camera.View;
+            _effect.Projection = camera.Projection;
             _effect.GraphicsDevice.SamplerStates[0] = new SamplerState() {Filter = TextureFilter.Linear};
 
             _effect.World = Matrix.Identity;
@@ -189,7 +249,7 @@ namespace Serpent
         {
             if (!fieldValue(floor, newLocation).IsNone)
                 return true;
-            if (fieldValue(floor + 1, newLocation).IsPortal)
+            if (fieldValue(floor, currentLocation).IsSlope && fieldValue(floor + 1, newLocation).IsPortal)
             {
                 floor++;
                 return true;
@@ -203,24 +263,29 @@ namespace Serpent
         }
 
         public float GetElevation(
-            Direction dir,
-            int floor,
-            Point p, 
-            float fraction)
+            Whereabouts whereabouts )
         {
-            var square = TheField[floor, p.Y, p.X];
+            if ( whereabouts.Direction == Direction.None )
+            {
+                
+            }
+            var p = whereabouts.NextLocation;
+            var square = fieldValue(whereabouts.Floor, p);
+            if (square.IsNone)
+                return 0;
             switch ( square.PlayingFieldSquareType )
             {
                 case PlayingFieldSquareType.None:
                     throw new Exception();
                 case PlayingFieldSquareType.Flat:
-                    return floor*1.333f;
+                    return whereabouts.Floor * 1.333f;
                 default:
-                    if (square.SlopeDirection.Backward == dir)
+                    var fraction = whereabouts.Fraction;
+                    if (square.SlopeDirection.Backward == whereabouts.Direction )
                         fraction = 1-fraction;
-                    else if (square.SlopeDirection != dir)
+                    else if (square.SlopeDirection != whereabouts.Direction)
                         throw new Exception();
-                    return floor*1.33f + (square.Elevation + fraction)/3f;
+                    return whereabouts.Floor * 1.33f + (square.Elevation + fraction) / 3f;
             }
         }
 
