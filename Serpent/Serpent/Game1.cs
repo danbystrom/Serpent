@@ -20,7 +20,7 @@ namespace Serpent
         private PlayingField _playingField;
 
         private PlayerSerpent _serpent;
-        private EnemySerpent _serpentEnemy;
+        private List<EnemySerpent> _enemies = new List<EnemySerpent>();
 
         private ModelManager _modelManager;
         private GraphicsDeviceManager _graphics;
@@ -29,7 +29,7 @@ namespace Serpent
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            _graphics.IsFullScreen = true;
+            //_graphics.IsFullScreen = true;
         }
 
         /// <summary>
@@ -46,31 +46,26 @@ namespace Serpent
                 texture,
                 2, 20, 20);
 
-            _serpent = new PlayerSerpent(this,
+            _serpent = new PlayerSerpent(
+                this,
+                _playingField,
+                Content.Load<Model>(@"Models\SerpentHead"),
+                Content.Load<Model>(@"Models\serpentsegment"));
+            Components.Add(_serpent);
+
+            for (var i = 0; i < 4; i++)
+            {
+                var enemy = new EnemySerpent(
+                    this,
                     _playingField,
                     Content.Load<Model>(@"Models\SerpentHead"),
-                    Content.Load<Model>(@"Models\serpentsegment"));
-            Components.Add(_serpent);
-            Components.Add(_serpent.Camera);
-
-            _serpentEnemy = new EnemySerpent(this,
-                _playingField,
-                Content.Load<Model>(@"Models\SerpentHead"),
-                Content.Load<Model>(@"Models\serpentsegment"),
-                _serpent.Camera,0);
-            Components.Add(_serpentEnemy);
-            _serpentEnemy = new EnemySerpent(this,
-                _playingField,
-                Content.Load<Model>(@"Models\SerpentHead"),
-                Content.Load<Model>(@"Models\serpentsegment"),
-                _serpent.Camera,1);
-            Components.Add(_serpentEnemy);
-            _serpentEnemy = new EnemySerpent(this,
-                _playingField,
-                Content.Load<Model>(@"Models\SerpentHead"),
-                Content.Load<Model>(@"Models\serpentsegment"),
-                _serpent.Camera,2);
-            Components.Add(_serpentEnemy);
+                    Content.Load<Model>(@"Models\serpentsegment"),
+                    _serpent.Camera,
+                    new Whereabouts(0,new Point(19,19), Direction.West ), 
+                    i);
+                _enemies.Add(enemy);
+                Components.Add(enemy);
+            }
 
             _modelManager = new ModelManager(this, _serpent.Camera);
             Components.Add(_modelManager);

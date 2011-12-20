@@ -18,12 +18,17 @@ namespace Serpent
             Model modelHead,
             Model modelSegment,
             Camera camera,
+            Whereabouts whereabouts,
             int x)
-            : base( game, pf, modelHead, modelSegment )
+            : base(game, pf, modelHead, modelSegment, whereabouts)
         {
-            while (x-- > 0)
-                _rnd.NextDouble();
+            _whereabouts = whereabouts;
+             _rnd.NextBytes(new byte[x]);
             _camera = camera;
+
+            addTail();
+            addTail();
+            addTail();
         }
 
         protected override void takeDirection()

@@ -10,21 +10,23 @@ namespace Serpent
 {
     public abstract class BaseSerpent : DrawableGameComponent
     {
-        private readonly PlayingField _pf;
+        protected readonly PlayingField _pf;
 
         protected Whereabouts _whereabouts = new Whereabouts();
+        protected Direction _headDirection;
         protected Camera _camera;
 
-        private double _fractionAngle;
+        protected double _fractionAngle;
 
-        private readonly Model _modelHead;
-        private readonly Model _modelSegment;
+        protected readonly Model _modelHead;
+        protected readonly Model _modelSegment;
 
-        private VertexBuffer _vb;
+        protected VertexBuffer _vb;
 
-        private SerpentTailSegment _tail;
+        protected readonly SerpentTailSegment _tail;
+        protected int _serpentLength;
 
-        private readonly Dictionary<Direction, Matrix> _headRotation = new Dictionary<Direction, Matrix>();
+        protected readonly Dictionary<Direction, Matrix> _headRotation = new Dictionary<Direction, Matrix>();
 
         protected abstract void takeDirection();
 
@@ -32,15 +34,16 @@ namespace Serpent
             Game game,
             PlayingField pf,
             Model modelHead,
-            Model modelSegment)
+            Model modelSegment,
+            Whereabouts whereabouts)
             : base(game)
         {
             _pf = pf;
             _modelHead = modelHead;
             _modelSegment = modelSegment;
-            
-            _headDirection  = _whereabouts.Direction = Direction.East;
-            _whereabouts.Location = Point.Zero;
+
+            _whereabouts = whereabouts;
+            _headDirection = _whereabouts.Direction;
 
             _headRotation.Add(Direction.West,
                               Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(MathHelper.Pi));
@@ -51,8 +54,8 @@ namespace Serpent
             _headRotation.Add(Direction.North,
                               Matrix.CreateRotationY(MathHelper.PiOver2)*Matrix.CreateRotationY(-MathHelper.PiOver2));
 
-            _tail = new SerpentTailSegment(_pf,Point.Zero);
-            _tail.Next = new SerpentTailSegment(_pf,Point.Zero);
+            _tail = new SerpentTailSegment(_pf, _whereabouts);
+            _serpentLength = 1;
         }
 
         protected override void LoadContent()
@@ -67,7 +70,8 @@ namespace Serpent
         {
             if (_whereabouts.Direction != Direction.None )
             {
-                _fractionAngle += gameTime.ElapsedGameTime.TotalMilliseconds*0.003;
+                var lengthSpeed = (10 - _serpentLength)/9f;
+                _fractionAngle += gameTime.ElapsedGameTime.TotalMilliseconds * 0.003 * lengthSpeed;
                 if (_fractionAngle >= 1)
                 {
                     _fractionAngle = 0;
@@ -88,7 +92,6 @@ namespace Serpent
             base.Update(gameTime);
         }
 
-        private Direction _headDirection;
 
         protected bool tryMove(Direction dir)
         {
@@ -98,7 +101,7 @@ namespace Serpent
             if (!_pf.CanMoveHere(ref _whereabouts.Floor, _whereabouts.Location, possibleLocationTo))
                 return false;
             _whereabouts.Direction = dir;
-            _tail.AddPathToWalk(_whereabouts.Location);
+            _tail.AddPathToWalk(_whereabouts);
             return true;
         }
 
@@ -113,8 +116,8 @@ namespace Serpent
                         Matrix.CreateScale(0.5f)*
                         Matrix.CreateTranslation(
                             0.5f + p.X,
-                            0.4f + _pf.GetElevation(_whereabouts),
-                            0.5f + p.Y)
+                            0.4f + p.Y,
+                            0.5f + p.Z)
                     });
 
             var worlds = new List<Matrix>();
@@ -125,14 +128,14 @@ namespace Serpent
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
                         0.5f + (p.X + p2.X)/2,
-                        0.3f + _pf.GetElevation(_whereabouts),
-                        0.5f + (p.Y + p2.Y) / 2));
+                        0.3f + p.Y,
+                        0.5f + (p.Z + p2.Z) / 2));
                 worlds.Add(
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
                         0.5f + p2.X,
-                        0.3f + _pf.GetElevation(_whereabouts),
-                        0.5f + p2.Y));
+                        0.3f + p2.Y,
+                        0.5f + p2.Z));
                 p = p2;
             }
             drawModel(_modelSegment, worlds);
@@ -158,30 +161,15 @@ namespace Serpent
                 }
         }
 
-        public Vector2 GetPosition()
+        public Vector3 GetPosition()
         {
             var d = _whereabouts.Direction.DirectionAsPoint();
-            return new Vector2(
+            return new Vector3(
                 _whereabouts.Location.X + d.X * _whereabouts.Fraction,
+                _pf.GetElevation(_whereabouts),
                 _whereabouts.Location.Y + d.Y * _whereabouts.Fraction);
         }
 
-        public Vector3 LookAtPosition
-        {
-            get
-            {
-                var d = _whereabouts.Direction.DirectionAsPoint();
-                return new Vector3(
-                    _whereabouts.Location.X + d.X * (float)_fractionAngle,
-                    _pf.GetElevation(_whereabouts),
-                    _whereabouts.Location.Y + d.Y * (float)_fractionAngle);
-            }
-        }
-
-        public Direction Direction
-        {
-            get { return _headDirection; }
-        }
 
         public void HitTest( Whereabouts where )
         {
@@ -190,6 +178,16 @@ namespace Serpent
                 
             }
         }
+
+        protected void addTail()
+        {
+            var tail = _tail;
+            while (tail.Next != null)
+                tail = tail.Next;
+            tail.Next = new SerpentTailSegment(_pf,_whereabouts);
+            _serpentLength++;
+        }
+
     }
 
 }

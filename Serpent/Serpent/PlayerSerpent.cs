@@ -18,11 +18,10 @@ namespace Serpent
             PlayingField pf,
             Model modelHead,
             Model modelSegment)
-            : base(game, pf, modelHead, modelSegment)
+            : base(game, pf, modelHead, modelSegment,new Whereabouts(0,Point.Zero,Direction.East))
         {
             _camera = new Camera(
                 game,
-                this,
                 new Vector3(0, 20, 2),
                 Vector3.Zero,
                 Vector3.Up);
@@ -36,8 +35,21 @@ namespace Serpent
 
         public override void Update(GameTime gameTime)
         {
+            _camera.Update( gameTime, LookAtPosition, _headDirection);
             checkKeyboardForDirection();
             base.Update(gameTime);
+        }
+
+        public Vector3 LookAtPosition
+        {
+            get
+            {
+                var d = _whereabouts.Direction.DirectionAsPoint();
+                return new Vector3(
+                    _whereabouts.Location.X + d.X * (float)_fractionAngle,
+                    _pf.GetElevation(_whereabouts),
+                    _whereabouts.Location.Y + d.Y * (float)_fractionAngle);
+            }
         }
 
         private void checkKeyboardForDirection()
@@ -54,7 +66,7 @@ namespace Serpent
 
         protected override void takeDirection()
         {
-            if (!tryMove(Direction.Turn(_nextKbdDirection)))
+            if (!tryMove(_headDirection.Turn(_nextKbdDirection)))
                 if (!tryMove(_whereabouts.Direction))
                     _whereabouts.Direction = Direction.None;
             _nextKbdDirection = RelativeDirection.None;
