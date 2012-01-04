@@ -28,7 +28,6 @@ namespace Serpent
 
             addTail();
             addTail();
-            addTail();
         }
 
         protected override void takeDirection()

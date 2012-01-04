@@ -30,6 +30,8 @@ namespace Serpent
 
         protected abstract void takeDirection();
 
+        public bool IsDead;
+
         protected BaseSerpent(
             Game game,
             PlayingField pf,
@@ -66,12 +68,19 @@ namespace Serpent
             base.LoadContent();
         }
 
+        protected virtual float modifySpeed()
+        {
+            return 1f;
+        }
+
         public override void Update(GameTime gameTime)
         {
-            if (_whereabouts.Direction != Direction.None )
+            var lengthSpeed = (11 - _serpentLength)/10f;
+            var speed = (float) gameTime.ElapsedGameTime.TotalMilliseconds*0.004f*lengthSpeed*modifySpeed();
+
+            if (_whereabouts.Direction != Direction.None)
             {
-                var lengthSpeed = (10 - _serpentLength)/9f;
-                _fractionAngle += gameTime.ElapsedGameTime.TotalMilliseconds * 0.003 * lengthSpeed;
+                _fractionAngle += speed;
                 if (_fractionAngle >= 1)
                 {
                     _fractionAngle = 0;
@@ -84,7 +93,7 @@ namespace Serpent
                 takeDirection();
 
             if (_tail != null)
-                _tail.Update(gameTime, GetPosition());
+                _tail.Update(gameTime, GetPosition(), speed);
 
             if (_whereabouts.Direction != Direction.None)
                 _headDirection = _whereabouts.Direction;
@@ -128,8 +137,8 @@ namespace Serpent
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
                         0.5f + (p.X + p2.X)/2,
-                        0.3f + p.Y,
-                        0.5f + (p.Z + p2.Z) / 2));
+                        0.3f + (p.Y + p2.Y)/2,
+                        0.5f + (p.Z + p2.Z)/2));
                 worlds.Add(
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
@@ -163,20 +172,59 @@ namespace Serpent
 
         public Vector3 GetPosition()
         {
-            var d = _whereabouts.Direction.DirectionAsPoint();
-            return new Vector3(
-                _whereabouts.Location.X + d.X * _whereabouts.Fraction,
-                _pf.GetElevation(_whereabouts),
-                _whereabouts.Location.Y + d.Y * _whereabouts.Fraction);
+            return _whereabouts.GetPosition(_pf);
         }
 
 
-        public void HitTest( Whereabouts where )
+        private int _pendingEatenSegments = 4;
+
+
+        private void grow(int length)
         {
-            if ( _whereabouts.DistanceSquared(where,_pf) < 1 )
+            _pendingEatenSegments += length;
+            for (var count = _pendingEatenSegments/5; count > 0; count--)
+                addTail();
+            _pendingEatenSegments %= 5;
+        }
+
+        public bool EatAt(BaseSerpent other)
+        {
+            if (Vector3.DistanceSquared(GetPosition(), other.GetPosition()) < 0.8f)
             {
-                
+                if (other._serpentLength > _serpentLength)
+                    return false;
+                grow(other._serpentLength + 1);
+                return true;
             }
+            for (var tail = other._tail; tail != null; tail = tail.Next)
+                if (Vector3.DistanceSquared(GetPosition(), tail.GetPosition()) < 0.2f)
+                {
+                    if (tail == other._tail)
+                    {
+                        grow(other._serpentLength + 1);
+                        return true;
+                    }
+                    grow(other.removeTail(tail));
+                    return false;
+                }
+            return false;
+        }
+
+        private int removeTail(SerpentTailSegment tail)
+        {
+            if (tail != _tail && tail != null)
+            {
+                var length = 1;
+                for (var test = _tail; test != null; test = test.Next, length++)
+                    if (test.Next == tail)
+                    {
+                        test.Next = null;
+                        var removedSegments = _serpentLength - length;
+                        _serpentLength = length;
+                        return removedSegments;
+                    }
+            }
+            throw new Exception();
         }
 
         protected void addTail()
@@ -184,7 +232,7 @@ namespace Serpent
             var tail = _tail;
             while (tail.Next != null)
                 tail = tail.Next;
-            tail.Next = new SerpentTailSegment(_pf,_whereabouts);
+            tail.Next = new SerpentTailSegment(_pf, tail.Whereabouts);
             _serpentLength++;
         }
 

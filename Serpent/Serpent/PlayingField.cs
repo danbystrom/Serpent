@@ -20,7 +20,7 @@ namespace Serpent
             _effect = new BasicEffect(graphicsDevice);
             _texture = texture;
 
-            Floors = floors = 4;
+            Floors = floors = 1;
             Width = width;
             Height = height;
             TheField = new PlayingFieldSquare[Floors, height, width];
@@ -28,105 +28,7 @@ namespace Serpent
             var builder = new PlayingFieldBuilder(TheField);
             builder.ConstructOneFloor(
                 0,
-                new[]
-                    {
-                        "XUUU                ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                UUUX"
-                    });
-            builder.ConstructOneFloor(
-                1,
-                new[]
-                    {
-                        "    DXXXXXXXXXXXXXXX",
-                        "       X           X",
-                        "XXXXXXXXXXXXXXXXXXXX",
-                        "X X X  X           X",
-                        "X X X  X           X",
-                        "XXX XXXXUUU        X",
-                        "X                  X",
-                        "XUUU               X",
-                        "X                  X",
-                        "X                  X",
-                        "XXXXXXXXXXXXXXXXXXXX",
-                        "X               X  X",
-                        "X               X  X",
-                        "X               X  X",
-                        "XXXXXXXXXXXXXX  X  X",
-                        "X            XXXXXXX",
-                        "X    U       X X    ",
-                        "X    U       XXX    ",
-                        "X    U        X     ",
-                        "XXXXXXXXXXXXXXXD    "
-                    });
-            builder.ConstructOneFloor(
-                2,
-                new[]
-                    {
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "  XXXXXXXXXXXXXXXX  ",
-                        "  X              X  ",
-                        "  XXXX     DXXXXXX  ",
-                        "     X           X  ",
-                        "    DXXXXXXXXXXXXX  ",
-                        "     X       X U    ",
-                        "  XXXXXXXXXXXX U    ",
-                        "  X X X X      U    ",
-                        "  XXX XXX           ",
-                        "   X   X            ",
-                        "   XX XX            ",
-                        "    XXX             ",
-                        "     D              ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                    });
-            builder.ConstructOneFloor(
-                3,
-                new[]
-                    {
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "                    ",
-                        "               D    ",
-                        "XXXXXXXXXXXXXXXXXXXX",
-                        "   X   X   X   X   X",
-                        "X  X XXX XXX XXX XXX",
-                        "XX X   X   X   X   X",
-                        "XXXX XXX   X   X XXX",
-                        "X XX   X   X   X   X",
-                        "X  X XXX   X   X XXX",
-                        "                    "
-                    });
-
+                PlayingFields.GetQ()[0]);
             var verts = new List<VertexPositionNormalTexture>();
             var vertsShadow = new List<VertexPositionColor>();
             for (var z = 0; z < Floors; z++)

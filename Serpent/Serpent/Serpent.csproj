@@ -87,6 +87,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicModel.cs" />
+    <Compile Include="Data.cs" />
+    <Compile Include="PlayingFields.cs" />
     <Compile Include="TreesModel.cs" />
     <Compile Include="SunflowersModel.cs" />
     <Compile Include="Camera.cs" />

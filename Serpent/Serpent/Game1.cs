@@ -16,20 +16,15 @@ namespace Serpent
     /// </summary>
     public class Game1 : Microsoft.Xna.Framework.Game
     {
-        // Vertex data
-        private PlayingField _playingField;
-
-        private PlayerSerpent _serpent;
-        private List<EnemySerpent> _enemies = new List<EnemySerpent>();
-
         private ModelManager _modelManager;
-        private GraphicsDeviceManager _graphics;
+        private readonly GraphicsDeviceManager _graphics;
+
+        private Data _data;
 
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            //_graphics.IsFullScreen = true;
         }
 
         /// <summary>
@@ -40,37 +35,16 @@ namespace Serpent
         /// </summary>
         protected override void Initialize()
         {
-            var texture = Content.Load<Texture2D>(@"Textures\grass");
-            _playingField = new PlayingField(
-                GraphicsDevice,
-                texture,
-                2, 20, 20);
-
-            _serpent = new PlayerSerpent(
-                this,
-                _playingField,
-                Content.Load<Model>(@"Models\SerpentHead"),
-                Content.Load<Model>(@"Models\serpentsegment"));
-            Components.Add(_serpent);
-
-            for (var i = 0; i < 4; i++)
-            {
-                var enemy = new EnemySerpent(
-                    this,
-                    _playingField,
-                    Content.Load<Model>(@"Models\SerpentHead"),
-                    Content.Load<Model>(@"Models\serpentsegment"),
-                    _serpent.Camera,
-                    new Whereabouts(0,new Point(19,19), Direction.West ), 
-                    i);
-                _enemies.Add(enemy);
-                Components.Add(enemy);
-            }
-
-            _modelManager = new ModelManager(this, _serpent.Camera);
-            Components.Add(_modelManager);
-
+            startGame();
             base.Initialize();
+        }
+
+        private void startGame()
+        {
+            Components.Clear();
+            _data = new Data(this);
+            _modelManager = new ModelManager(this, _data.PlayerSerpent.Camera);
+            Components.Add(_modelManager);
         }
 
         /// <summary>
@@ -98,11 +72,36 @@ namespace Serpent
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                this.Exit();
-
             base.Update(gameTime);
+
+            _data.UpdateKeyboard();
+
+            if ( _data.KeyboardState.IsKeyDown(Keys.Escape))
+                this.Exit();
+            if ( _data.HasKeyToggled(Keys.Enter) && _data.KeyboardState.IsKeyDown(Keys.LeftAlt))
+            {
+                _graphics.IsFullScreen ^= true;
+                _graphics.ApplyChanges();
+            }
+
+            if (_data.HasKeyToggled(Keys.C) )
+                _data.PlayerSerpent.Camera.CameraBehavior = _data.PlayerSerpent.Camera.CameraBehavior ==
+                                                            CameraBehavior.FollowSerpent
+                                                                ? CameraBehavior.Static
+                                                                : CameraBehavior.FollowSerpent;
+            for (var i = _data.Enemies.Count - 1; i >= 0; i-- )
+            {
+                if (_data.PlayerSerpent.EatAt(_data.Enemies[i]))
+                {
+                    Components.Remove(_data.Enemies[i]);
+                    _data.Enemies.RemoveAt(i);
+                    if ( _data.Enemies.Count==0 )
+                        startGame();
+                }
+                else
+                    if ( _data.Enemies[i].EatAt(_data.PlayerSerpent) )
+                        startGame();
+            }
         }
 
         /// <summary>
@@ -112,7 +111,7 @@ namespace Serpent
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            _playingField.Draw(_serpent.Camera);
+            _data.PlayingField.Draw(_data.PlayerSerpent.Camera);
             base.Draw(gameTime);
         }
     }

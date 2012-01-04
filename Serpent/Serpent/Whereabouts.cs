@@ -26,12 +26,13 @@ namespace Serpent
             get { return Location.Add(Direction.DirectionAsPoint());  }    
         }
 
-        public float DistanceSquared(Whereabouts other, PlayingField pf )
+        public Vector3 GetPosition(PlayingField pf)
         {
-            var dx = Location.X - other.Location.X;
-            var dy = Location.X - other.Location.X;
-            var dz = pf.GetElevation(this) - pf.GetElevation(other);
-            return dx*dx + dy*dy + dz*dz;
+            var d = Direction.DirectionAsPoint();
+            return new Vector3(
+                Location.X + d.X * Fraction,
+                pf.GetElevation(this),
+                Location.Y + d.Y * Fraction);
         }
 
     }

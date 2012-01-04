@@ -4,9 +4,13 @@ using Microsoft.Xna.Framework;
 
 namespace Serpent
 {
-    /// <summary>
-    /// This is a game component that implements IUpdateable.
-    /// </summary>
+     public enum CameraBehavior
+     {
+        Static,
+        FollowSerpent,
+        FreeFlying
+     }
+
     public class Camera
     {
         public Matrix View { get; protected set; }
@@ -14,33 +18,72 @@ namespace Serpent
 
         private Vector3 _position;
 
-        public Camera(Game game, Vector3 pos, Vector3 target, Vector3 up)
+        private CameraBehavior _cameraBehavior;
+        private Vector3 _upVector;
+        private Vector3 _goingFromUpVector;
+        private Vector3 _desiredUpVector;
+        private float _upVectorFactor;
+
+        public Camera(Rectangle clientBounds, Vector3 pos, Vector3 target, CameraBehavior cameraBehavior)
         {
-            View = Matrix.CreateLookAt(pos, target, up);
+            CameraBehavior = cameraBehavior;
+            _goingFromUpVector = _upVector = _desiredUpVector;
+            _upVectorFactor = 1;
+
+            View = Matrix.CreateLookAt(pos, target, _upVector);
             Projection = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.PiOver4,
-                (float) game.Window.ClientBounds.Width/
-                (float) game.Window.ClientBounds.Height,
+                clientBounds.Width/(float) clientBounds.Height,
                 1, 100);
         }
 
-        public  void Update(GameTime gameTime,Vector3 target,Direction direction)
+        public CameraBehavior CameraBehavior
         {
-            var t2 = new Vector2(target.X, target.Z);
-            var qaz = this.moveTo(
-                t2,
-                t2 - direction.DirectionAsVector2()*9,
-                gameTime.ElapsedGameTime.TotalMilliseconds);
+            get { return _cameraBehavior; }
+            set
+            {
+                _cameraBehavior = value;
+                _goingFromUpVector = _upVector;
+                _upVectorFactor = 0;
+                _desiredUpVector = CameraBehavior == CameraBehavior.FollowSerpent
+                    ? Vector3.Up
+                    : Vector3.Forward;
+}
+        }
 
-            _position = new Vector3(
-                qaz.X,
-                target.Y + 5,
-                qaz.Y);
+        public void Update( GameTime gameTime, Vector3 target, Direction direction)
+        {
+            if ( _upVectorFactor < 1 )
+            {
+                _upVectorFactor = Math.Min( _upVectorFactor + (float)gameTime.ElapsedGameTime.TotalMilliseconds*0.003f, 1);
+                Vector3.SmoothStep(ref _goingFromUpVector, ref _desiredUpVector, _upVectorFactor, out _upVector);
+            }
 
-            View = Matrix.CreateLookAt(
-                _position,
-                new Vector3(target.X, target.Y, target.Z),
-                Vector3.Up);
+            if (CameraBehavior == CameraBehavior.FollowSerpent)
+            {
+                var t2 = new Vector2(target.X, target.Z);
+                var qaz = this.moveTo(
+                    t2,
+                    t2 - direction.DirectionAsVector2()*9,
+                    gameTime.ElapsedGameTime.TotalMilliseconds);
+
+                _position = new Vector3(
+                    qaz.X,
+                    target.Y + 5,
+                    qaz.Y);
+
+                View = Matrix.CreateLookAt(
+                    _position,
+                    new Vector3(target.X, target.Y, target.Z),
+                    _upVector);
+            }
+            else
+            {
+                View = Matrix.CreateLookAt(
+                    new Vector3(10, 30, 10),
+                    new Vector3(10, 0, 10),
+                    _upVector);
+            }
         }
 
         private Vector2 moveTo(Vector2 target, Vector2 desired, double elapsedTime)
