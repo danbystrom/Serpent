@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Serpent
 {
-    public class Data
+    public class Data : IDisposable
     {
         public static Data Instance;
 
@@ -21,6 +21,10 @@ namespace Serpent
 
         public Data( Game game1 )
         {
+            if ( Instance != null )
+                Instance.Dispose();
+            Instance = this;
+
             var texture = game1.Content.Load<Texture2D>(@"Textures\grass");
 
             PlayingField = new PlayingField(
@@ -33,12 +37,10 @@ namespace Serpent
                 PlayingField,
                 game1.Content.Load<Model>(@"Models\SerpentHead"),
                 game1.Content.Load<Model>(@"Models\serpentsegment"));
-            game1.Components.Add(PlayerSerpent);
 
             for (var i = 0; i < 5; i++)
             {
                 var enemy = new EnemySerpent(
-                    game1,
                     PlayingField,
                     game1.Content.Load<Model>(@"Models\SerpentHead"),
                     game1.Content.Load<Model>(@"Models\serpentsegment"),
@@ -46,10 +48,7 @@ namespace Serpent
                     new Whereabouts(0, new Point(20, 0), Direction.West),
                     i);
                 Enemies.Add(enemy);
-                game1.Components.Add(enemy);
             }
-
-            Instance = this;
         }
 
         public void UpdateKeyboard()
@@ -63,5 +62,11 @@ namespace Serpent
             return KeyboardState.IsKeyDown(key) && PrevKeyboardState.IsKeyUp(key);
         }
 
+        public void Dispose()
+        {
+            PlayingField.Dispose();
+        }
+
     }
+
 }

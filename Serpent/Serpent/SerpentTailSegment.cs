@@ -49,13 +49,13 @@ namespace Serpent
 
         public void AddPathToWalk(Whereabouts w)
         {
-            if (PathToWalk[PathToWalk.Count - 1].Location != w.Location)
-            {
-                w.Fraction = 0;
-                PathToWalk.Add(w);
-                if (Next != null)
-                    Next.AddPathToWalk(PathToWalk[0]);
-            }
+            if (PathToWalk.Exists(e => e.Location == w.Location))
+                return;
+
+            w.Fraction = 0;
+            PathToWalk.Add(w);
+            if (Next != null)
+                Next.AddPathToWalk(PathToWalk[0]);
         }
     }
 }

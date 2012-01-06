@@ -7,9 +7,18 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace Serpent
-{
-    public abstract class BaseSerpent : DrawableGameComponent
+
+{       public enum SerpentStatus
+        {
+            Alive,
+            Ghost,
+            Finished
+        }
+
+    public abstract class BaseSerpent
     {
+        public SerpentStatus SerpentStatus;
+
         protected readonly PlayingField _pf;
 
         protected Whereabouts _whereabouts = new Whereabouts();
@@ -21,8 +30,6 @@ namespace Serpent
         protected readonly Model _modelHead;
         protected readonly Model _modelSegment;
 
-        protected VertexBuffer _vb;
-
         protected readonly SerpentTailSegment _tail;
         protected int _serpentLength;
 
@@ -30,15 +37,13 @@ namespace Serpent
 
         protected abstract void takeDirection();
 
-        public bool IsDead;
+        private int _pendingEatenSegments = 4;
 
         protected BaseSerpent(
-            Game game,
             PlayingField pf,
             Model modelHead,
             Model modelSegment,
             Whereabouts whereabouts)
-            : base(game)
         {
             _pf = pf;
             _modelHead = modelHead;
@@ -60,20 +65,12 @@ namespace Serpent
             _serpentLength = 1;
         }
 
-        protected override void LoadContent()
-        {
-            var cube = Cube.CreateCube(0.8f);
-            _vb = new VertexBuffer(GraphicsDevice, typeof (VertexPositionNormalTexture), cube.Length, BufferUsage.None);
-            _vb.SetData(cube);
-            base.LoadContent();
-        }
-
         protected virtual float modifySpeed()
         {
             return 1f;
         }
 
-        public override void Update(GameTime gameTime)
+        public virtual void Update(GameTime gameTime)
         {
             var lengthSpeed = (11 - _serpentLength)/10f;
             var speed = (float) gameTime.ElapsedGameTime.TotalMilliseconds*0.004f*lengthSpeed*modifySpeed();
@@ -97,8 +94,6 @@ namespace Serpent
 
             if (_whereabouts.Direction != Direction.None)
                 _headDirection = _whereabouts.Direction;
-
-            base.Update(gameTime);
         }
 
 
@@ -114,7 +109,7 @@ namespace Serpent
             return true;
         }
 
-        public override void Draw(GameTime gameTime)
+        public virtual void Draw(GameTime gameTime)
         {
             var p = GetPosition();
             drawModel(
@@ -124,9 +119,9 @@ namespace Serpent
                         _headRotation[_headDirection]*
                         Matrix.CreateScale(0.5f)*
                         Matrix.CreateTranslation(
-                            0.5f + p.X,
+                            p.X,
                             0.4f + p.Y,
-                            0.5f + p.Z)
+                            p.Z)
                     });
 
             var worlds = new List<Matrix>();
@@ -136,23 +131,25 @@ namespace Serpent
                 worlds.Add(
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
-                        0.5f + (p.X + p2.X)/2,
+                        (p.X + p2.X)/2,
                         0.3f + (p.Y + p2.Y)/2,
-                        0.5f + (p.Z + p2.Z)/2));
+                        (p.Z + p2.Z)/2));
                 worlds.Add(
                     Matrix.CreateScale(0.4f)*
                     Matrix.CreateTranslation(
-                        0.5f + p2.X,
+                        p2.X,
                         0.3f + p2.Y,
-                        0.5f + p2.Z));
+                        p2.Z));
                 p = p2;
             }
             drawModel(_modelSegment, worlds);
-
-            base.Draw(gameTime);
         }
 
-        private void drawModel(Model model, IEnumerable<Matrix> worlds)
+        protected virtual void setBasicEffect( BasicEffect be )
+        {
+        }
+
+        protected void drawModel(Model model, IEnumerable<Matrix> worlds)
         {
             var transforms = new Matrix[model.Bones.Count];
             model.CopyAbsoluteBoneTransformsTo(transforms);
@@ -162,6 +159,7 @@ namespace Serpent
                     foreach (BasicEffect be in mesh.Effects)
                     {
                         be.EnableDefaultLighting();
+                        setBasicEffect(be);
                         be.Projection = _camera.Projection;
                         be.View = _camera.View;
                         be.World = transforms[mesh.ParentBone.Index]*world;
@@ -175,10 +173,6 @@ namespace Serpent
             return _whereabouts.GetPosition(_pf);
         }
 
-
-        private int _pendingEatenSegments = 4;
-
-
         private void grow(int length)
         {
             _pendingEatenSegments += length;
@@ -187,8 +181,13 @@ namespace Serpent
             _pendingEatenSegments %= 5;
         }
 
+        protected bool _isLonger;
+
         public bool EatAt(BaseSerpent other)
         {
+            _isLonger = _serpentLength >= other._serpentLength;
+            if (SerpentStatus != SerpentStatus.Alive)
+                return false;
             if (Vector3.DistanceSquared(GetPosition(), other.GetPosition()) < 0.8f)
             {
                 if (other._serpentLength > _serpentLength)

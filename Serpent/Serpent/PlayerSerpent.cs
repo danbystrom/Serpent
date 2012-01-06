@@ -17,13 +17,13 @@ namespace Serpent
             PlayingField pf,
             Model modelHead,
             Model modelSegment)
-            : base(game, pf, modelHead, modelSegment, new Whereabouts(0, Point.Zero, Direction.East))
+            : base(pf, modelHead, modelSegment, new Whereabouts(0, Point.Zero, Direction.East))
         {
             _camera = new Camera(
                 game.Window.ClientBounds,
                 new Vector3(0, 20, 2),
                 Vector3.Zero,
-                CameraBehavior.Static);
+                CameraBehavior.FollowSerpent);
         }
 
         public Camera Camera
@@ -33,7 +33,7 @@ namespace Serpent
 
         protected override float modifySpeed()
         {
-            return base.modifySpeed()*1.4f;
+            return base.modifySpeed()*1.3f;
         }
 
         public override void Update(GameTime gameTime)
@@ -66,6 +66,12 @@ namespace Serpent
             if (!tryMove(_headDirection.Turn(nextDirection)))
                 if (!tryMove(_whereabouts.Direction))
                     _whereabouts.Direction = Direction.None;
+        }
+
+        protected override void setBasicEffect(BasicEffect be)
+        {
+            be.Alpha = 1;
+            be.DiffuseColor = new Vector3(0.4f, 0.4f, 0.6f);
         }
 
     }

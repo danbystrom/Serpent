@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Serpent
 {
-    public class PlayingField
+    public class PlayingField : IDisposable
     {
         public readonly int Floors, Width, Height;
         public readonly VertexBuffer VertexBuffer;
@@ -46,7 +46,7 @@ namespace Serpent
 
             VertexBuffer = new VertexBuffer(graphicsDevice, typeof(VertexPositionNormalTexture), verts.Count, BufferUsage.None);
             VertexBuffer.SetData(verts.ToArray(), 0, verts.Count);
-
+ 
             VertexBufferShadow = new VertexBuffer(graphicsDevice, typeof(VertexPositionColor), vertsShadow.Count, BufferUsage.None);
             VertexBufferShadow.SetData(vertsShadow.ToArray(), 0, vertsShadow.Count);
         }
@@ -108,7 +108,7 @@ namespace Serpent
             _effect.Projection = camera.Projection;
             _effect.GraphicsDevice.SamplerStates[0] = new SamplerState() {Filter = TextureFilter.Linear};
 
-            _effect.World = Matrix.Identity;
+            _effect.World = Matrix.CreateTranslation( -0.5f, 0, -0.5f );
             _effect.Texture = _texture;
             _effect.TextureEnabled = true;
             _effect.VertexColorEnabled = false;
@@ -191,6 +191,12 @@ namespace Serpent
             }
         }
 
+        public void Dispose()
+        {
+            _effect.Dispose();
+            VertexBuffer.Dispose();
+            VertexBufferShadow.Dispose();
+        }
     }
 
 }

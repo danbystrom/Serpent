@@ -11,16 +11,15 @@ namespace Serpent
     public class EnemySerpent : BaseSerpent
     {
         private readonly Random _rnd = new Random();
-
+ 
         public EnemySerpent(
-            Game game,
             PlayingField pf,
             Model modelHead,
             Model modelSegment,
             Camera camera,
             Whereabouts whereabouts,
             int x)
-            : base(game, pf, modelHead, modelSegment, whereabouts)
+            : base( pf, modelHead, modelSegment, whereabouts)
         {
             _whereabouts = whereabouts;
              _rnd.NextBytes(new byte[x]);
@@ -46,6 +45,19 @@ namespace Serpent
                     return;
                 tryMove(_whereabouts.Direction.Backward);
             }
+        }
+
+        public virtual void Draw(GameTime gameTime)
+        {
+            base.Draw(gameTime);
+        }
+
+        protected override void setBasicEffect(BasicEffect be)
+        {
+            be.DiffuseColor = _isLonger
+                ? new Vector3(0.8f, 0.2f, 0.2f)
+                : new Vector3(0.2f, 0.8f, 0.2f);
+            be.Alpha = SerpentStatus == SerpentStatus.Alive ? 1 : 0.5f;
         }
 
     }

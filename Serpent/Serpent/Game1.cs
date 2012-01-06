@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 
 namespace Serpent
 {
@@ -53,7 +46,8 @@ namespace Serpent
         /// </summary>
         protected override void LoadContent()
         {
-            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            GraphicsDevice.BlendState = BlendState.AlphaBlend;
         }
 
         /// <summary>
@@ -89,19 +83,19 @@ namespace Serpent
                                                             CameraBehavior.FollowSerpent
                                                                 ? CameraBehavior.Static
                                                                 : CameraBehavior.FollowSerpent;
-            for (var i = _data.Enemies.Count - 1; i >= 0; i-- )
+
+            _data.PlayerSerpent.Update(gameTime);
+            foreach (var enemy in _data.Enemies )
             {
-                if (_data.PlayerSerpent.EatAt(_data.Enemies[i]))
-                {
-                    Components.Remove(_data.Enemies[i]);
-                    _data.Enemies.RemoveAt(i);
+                enemy.Update(gameTime);
+                if (enemy.EatAt(_data.PlayerSerpent))
+                    startGame();
+                else if (enemy.SerpentStatus == SerpentStatus.Alive && _data.PlayerSerpent.EatAt(enemy))
+                    enemy.SerpentStatus = SerpentStatus.Ghost;
+            }
+            _data.Enemies.RemoveAll(e => e.SerpentStatus == SerpentStatus.Finished);
                     if ( _data.Enemies.Count==0 )
                         startGame();
-                }
-                else
-                    if ( _data.Enemies[i].EatAt(_data.PlayerSerpent) )
-                        startGame();
-            }
         }
 
         /// <summary>
@@ -112,6 +106,9 @@ namespace Serpent
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             _data.PlayingField.Draw(_data.PlayerSerpent.Camera);
+            _data.PlayerSerpent.Draw(gameTime);
+            foreach (var enemy in _data.Enemies)
+                enemy.Draw(gameTime);
             base.Draw(gameTime);
         }
     }

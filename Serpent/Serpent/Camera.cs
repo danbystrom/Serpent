@@ -20,15 +20,13 @@ namespace Serpent
 
         private CameraBehavior _cameraBehavior;
         private Vector3 _upVector;
-        private Vector3 _goingFromUpVector;
         private Vector3 _desiredUpVector;
-        private float _upVectorFactor;
+        private Vector3 _target;
 
         public Camera(Rectangle clientBounds, Vector3 pos, Vector3 target, CameraBehavior cameraBehavior)
         {
             CameraBehavior = cameraBehavior;
-            _goingFromUpVector = _upVector = _desiredUpVector;
-            _upVectorFactor = 1;
+            _upVector = _desiredUpVector;
 
             View = Matrix.CreateLookAt(pos, target, _upVector);
             Projection = Matrix.CreatePerspectiveFieldOfView(
@@ -43,8 +41,6 @@ namespace Serpent
             set
             {
                 _cameraBehavior = value;
-                _goingFromUpVector = _upVector;
-                _upVectorFactor = 0;
                 _desiredUpVector = CameraBehavior == CameraBehavior.FollowSerpent
                     ? Vector3.Up
                     : Vector3.Forward;
@@ -53,42 +49,42 @@ namespace Serpent
 
         public void Update( GameTime gameTime, Vector3 target, Direction direction)
         {
-            if ( _upVectorFactor < 1 )
-            {
-                _upVectorFactor = Math.Min( _upVectorFactor + (float)gameTime.ElapsedGameTime.TotalMilliseconds*0.003f, 1);
-                Vector3.SmoothStep(ref _goingFromUpVector, ref _desiredUpVector, _upVectorFactor, out _upVector);
-            }
+            _upVector = _upVector*99/100 + _desiredUpVector/100;
 
             if (CameraBehavior == CameraBehavior.FollowSerpent)
             {
-                var t2 = new Vector2(target.X, target.Z);
-                var qaz = this.moveTo(
-                    t2,
-                    t2 - direction.DirectionAsVector2()*9,
+                var target2D = new Vector2(target.X, target.Z);
+                var position2D = moveTo(
+                    new Vector2(_position.X, _position.Z),
+                    target2D,
+                    target2D - direction.DirectionAsVector2()*9,
                     gameTime.ElapsedGameTime.TotalMilliseconds);
 
                 _position = new Vector3(
-                    qaz.X,
-                    target.Y + 5,
-                    qaz.Y);
+                    position2D.X,
+                    _position.Y*99/100 + (target.Y + 5)/100,
+                    position2D.Y);
 
-                View = Matrix.CreateLookAt(
-                    _position,
-                    new Vector3(target.X, target.Y, target.Z),
-                    _upVector);
             }
             else
             {
-                View = Matrix.CreateLookAt(
-                    new Vector3(10, 30, 10),
-                    new Vector3(10, 0, 10),
-                    _upVector);
+                _position = _position*99/100 + new Vector3(10, 30, 10)/100;
+                target = _target*99/100 + new Vector3(10, 0, 10)/100;
             }
+
+            _target = target;
+            View = Matrix.CreateLookAt(
+                _position,
+                _target,
+                _upVector);
         }
 
-        private Vector2 moveTo(Vector2 target, Vector2 desired, double elapsedTime)
+        private static Vector2 moveTo(
+            Vector2 camera,
+            Vector2 target,
+            Vector2 desired,
+            double elapsedTime)
         {
-            var camera = new Vector2(_position.X, _position.Z);
             var d2TargetDesired = Vector2.DistanceSquared(target, desired);
             var d2CameraDesired = Vector2.DistanceSquared(camera, desired);
             var d2TargetCamera = Vector2.DistanceSquared(target, camera);
