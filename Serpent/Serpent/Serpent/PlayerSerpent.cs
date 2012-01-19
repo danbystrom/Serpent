@@ -15,9 +15,9 @@ namespace Serpent
         public PlayerSerpent(
             Game game,
             PlayingField pf,
-            Model modelHead,
-            Model modelSegment)
-            : base(pf, modelHead, modelSegment, new Whereabouts(0, Point.Zero, Direction.East))
+            ModelWrapper modelHead,
+            ModelWrapper modelSegment)
+            : base( game, pf, modelHead, modelSegment, new Whereabouts(0, Point.Zero, Direction.East))
         {
             _camera = new Camera(
                 game.Window.ClientBounds,
@@ -38,9 +38,14 @@ namespace Serpent
 
         public override void Update(GameTime gameTime)
         {
-            _camera.Update(gameTime, LookAtPosition, _headDirection);
+            UpdateCameraOnly(gameTime);
             _turnAround ^= Data.Instance.HasKeyToggled(Keys.Down);
             base.Update(gameTime);
+        }
+
+        public void UpdateCameraOnly(GameTime gameTime)
+        {
+            _camera.Update(gameTime, LookAtPosition, _headDirection);
         }
 
         public Vector3 LookAtPosition
@@ -68,10 +73,9 @@ namespace Serpent
                     _whereabouts.Direction = Direction.None;
         }
 
-        protected override void setBasicEffect(BasicEffect be)
+        protected override Vector3 tintColor()
         {
-            be.Alpha = 1;
-            be.DiffuseColor = new Vector3(0.4f, 0.4f, 0.6f);
+            return new Vector3(0.4f, 0.4f, 0.6f);
         }
 
     }

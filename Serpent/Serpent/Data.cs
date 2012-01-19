@@ -12,7 +12,7 @@ namespace Serpent
     {
         public static Data Instance;
 
-        public readonly PlayingField PlayingField;
+        public static PlayingField PlayingField;
         public readonly PlayerSerpent PlayerSerpent;
         public readonly List<EnemySerpent> Enemies = new List<EnemySerpent>();
 
@@ -27,23 +27,27 @@ namespace Serpent
 
             var texture = game1.Content.Load<Texture2D>(@"Textures\grass");
 
-            PlayingField = new PlayingField(
-                game1.GraphicsDevice,
-                texture,
-                1, 25, 21);
+            if ( PlayingField == null )
+                PlayingField = new PlayingField(
+                    game1.GraphicsDevice,
+                    texture );
+
+            var serpentHead = new ModelWrapper( game1, game1.Content.Load<Model>(@"Models\SerpentHead") );
+            var serpentSegment = new ModelWrapper( game1, game1.Content.Load<Model>(@"Models\serpentsegment") );
 
             PlayerSerpent = new PlayerSerpent(
                 game1,
                 PlayingField,
-                game1.Content.Load<Model>(@"Models\SerpentHead"),
-                game1.Content.Load<Model>(@"Models\serpentsegment"));
+                serpentHead,
+                serpentSegment);
 
             for (var i = 0; i < 5; i++)
             {
                 var enemy = new EnemySerpent(
+                    game1,
                     PlayingField,
-                    game1.Content.Load<Model>(@"Models\SerpentHead"),
-                    game1.Content.Load<Model>(@"Models\serpentsegment"),
+                    serpentHead,
+                    serpentSegment,
                     PlayerSerpent.Camera,
                     new Whereabouts(0, new Point(20, 0), Direction.West),
                     i);

@@ -15,20 +15,24 @@ namespace Serpent
         private readonly BasicEffect _effect;
         private readonly Texture2D _texture;
 
-        public PlayingField(GraphicsDevice graphicsDevice, Texture2D texture, int floors, int width, int height)
+        public PlayingField(GraphicsDevice graphicsDevice, Texture2D texture)
         {
             _effect = new BasicEffect(graphicsDevice);
             _texture = texture;
 
-            Floors = floors = 1;
-            Width = width;
-            Height = height;
-            TheField = new PlayingFieldSquare[Floors, height, width];
+            var field = PlayingFields.GetQ();
+
+            Floors = field.Count;
+            Height = field[0].Length;
+            Width = field[0][0].Length;
+            TheField = new PlayingFieldSquare[Floors, Height, Width];
 
             var builder = new PlayingFieldBuilder(TheField);
-            builder.ConstructOneFloor(
-                0,
-                PlayingFields.GetQ()[0]);
+            for (var i = 0; i < field.Count; i++)
+                builder.ConstructOneFloor(
+                    i,
+                    field[i]);
+
             var verts = new List<VertexPositionNormalTexture>();
             var vertsShadow = new List<VertexPositionColor>();
             for (var z = 0; z < Floors; z++)
@@ -193,9 +197,9 @@ namespace Serpent
 
         public void Dispose()
         {
-            _effect.Dispose();
-            VertexBuffer.Dispose();
-            VertexBufferShadow.Dispose();
+            //_effect.Dispose();
+            //VertexBuffer.Dispose();
+            //VertexBufferShadow.Dispose();
         }
     }
 

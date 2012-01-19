@@ -7,13 +7,13 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace Serpent
-
-{       public enum SerpentStatus
-        {
-            Alive,
-            Ghost,
-            Finished
-        }
+{
+    public enum SerpentStatus
+    {
+        Alive,
+        Ghost,
+        Finished
+    }
 
     public abstract class BaseSerpent
     {
@@ -27,8 +27,8 @@ namespace Serpent
 
         protected double _fractionAngle;
 
-        protected readonly Model _modelHead;
-        protected readonly Model _modelSegment;
+        protected readonly ModelWrapper _modelHead;
+        protected readonly ModelWrapper _modelSegment;
 
         protected readonly SerpentTailSegment _tail;
         protected int _serpentLength;
@@ -39,10 +39,14 @@ namespace Serpent
 
         private int _pendingEatenSegments = 4;
 
+        private float _layingEgg;
+        private const float TimeForLayingEggProcess = 5;
+
         protected BaseSerpent(
+            Game game,
             PlayingField pf,
-            Model modelHead,
-            Model modelSegment,
+            ModelWrapper modelHead,
+            ModelWrapper modelSegment,
             Whereabouts whereabouts)
         {
             _pf = pf;
@@ -63,6 +67,8 @@ namespace Serpent
 
             _tail = new SerpentTailSegment(_pf, _whereabouts);
             _serpentLength = 1;
+
+            _layingEgg = (float)(-5 - new Random().NextDouble()*30);
         }
 
         protected virtual float modifySpeed()
@@ -73,7 +79,7 @@ namespace Serpent
         public virtual void Update(GameTime gameTime)
         {
             var lengthSpeed = (11 - _serpentLength)/10f;
-            var speed = (float) gameTime.ElapsedGameTime.TotalMilliseconds*0.004f*lengthSpeed*modifySpeed();
+            var speed = (float) gameTime.ElapsedGameTime.TotalMilliseconds*0.0045f*lengthSpeed*modifySpeed();
 
             if (_whereabouts.Direction != Direction.None)
             {
@@ -112,20 +118,22 @@ namespace Serpent
         public virtual void Draw(GameTime gameTime)
         {
             var p = GetPosition();
-            drawModel(
-                _modelHead,
-                new[]
-                    {
-                        _headRotation[_headDirection]*
-                        Matrix.CreateScale(0.5f)*
-                        Matrix.CreateTranslation(
-                            p.X,
-                            0.4f + p.Y,
-                            p.Z)
-                    });
+            _modelHead.Draw(
+                _camera,
+                _headRotation[_headDirection]*
+                Matrix.CreateScale(0.5f)*
+                Matrix.CreateTranslation(
+                    p.X,
+                    0.4f + p.Y,
+                    p.Z),
+                tintColor(),
+                0.5f,
+                SerpentStatus == SerpentStatus.Alive ? 1 : 0.5f);
 
             var worlds = new List<Matrix>();
-            for (var segment = _tail; segment != null; segment = segment.Next)
+
+            var segment = _tail;
+            while ( true )
             {
                 var p2 = segment.GetPosition();
                 worlds.Add(
@@ -141,31 +149,46 @@ namespace Serpent
                         0.3f + p2.Y,
                         p2.Z));
                 p = p2;
+                if ( segment.Next == null )
+                    break;
+                segment = segment.Next;
             }
-            drawModel(_modelSegment, worlds);
+
+            if (_layingEgg > -500)
+            {
+                var d = segment.Whereabouts.Direction;
+                var t = d == Direction.North || d == Direction.South
+                                   ? Matrix.CreateScale(0.6f, 0.6f, 0.8f)
+                                   : Matrix.CreateScale(0.8f, 0.6f, 0.6f);
+                var off = d.DirectionAsVector2()*(-0.3f);
+                t *= Matrix.CreateTranslation(off.X, -0.3f, off.Y);
+                _modelSegment.Draw(
+                    _camera,
+                    t*worlds[worlds.Count - 1],
+                    Vector3.One,
+                    1,
+                    1);
+                _modelSegment.Draw(
+                    _camera,
+                    worlds[worlds.Count - 1],
+                    tintColor(),
+                    0.5f,
+                    0.9f);
+                worlds.RemoveAt(worlds.Count - 1);
+            }
+
+            foreach ( var world in worlds )
+                _modelSegment.Draw(
+                    _camera,
+                    world,
+                    tintColor(),
+                    0.5f,
+                    SerpentStatus == SerpentStatus.Alive ? 1 : 0.5f);
         }
 
-        protected virtual void setBasicEffect( BasicEffect be )
+        protected virtual Vector3 tintColor()
         {
-        }
-
-        protected void drawModel(Model model, IEnumerable<Matrix> worlds)
-        {
-            var transforms = new Matrix[model.Bones.Count];
-            model.CopyAbsoluteBoneTransformsTo(transforms);
-            foreach (var world in worlds)
-                foreach (var mesh in model.Meshes)
-                {
-                    foreach (BasicEffect be in mesh.Effects)
-                    {
-                        be.EnableDefaultLighting();
-                        setBasicEffect(be);
-                        be.Projection = _camera.Projection;
-                        be.View = _camera.View;
-                        be.World = transforms[mesh.ParentBone.Index]*world;
-                    }
-                    mesh.Draw();
-                }
+            return Vector3.Zero;
         }
 
         public Vector3 GetPosition()

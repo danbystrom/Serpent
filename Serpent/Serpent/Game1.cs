@@ -13,6 +13,7 @@ namespace Serpent
         private readonly GraphicsDeviceManager _graphics;
 
         private Data _data;
+        private bool _paused;
 
         public Game1()
         {
@@ -83,6 +84,19 @@ namespace Serpent
                                                             CameraBehavior.FollowSerpent
                                                                 ? CameraBehavior.Static
                                                                 : CameraBehavior.FollowSerpent;
+            if (_data.HasKeyToggled(Keys.F))
+                _data.PlayerSerpent.Camera.CameraBehavior = _data.PlayerSerpent.Camera.CameraBehavior ==
+                                                            CameraBehavior.FollowSerpent
+                                                                ? CameraBehavior.FreeFlying
+                                                                : CameraBehavior.FollowSerpent;
+            if (_data.HasKeyToggled(Keys.P))
+                _paused ^= true;
+
+            if (_paused)
+            {
+                _data.PlayerSerpent.UpdateCameraOnly(gameTime);
+                return;
+            }
 
             _data.PlayerSerpent.Update(gameTime);
             foreach (var enemy in _data.Enemies )
@@ -105,7 +119,8 @@ namespace Serpent
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            _data.PlayingField.Draw(_data.PlayerSerpent.Camera);
+            //_data.PlayingField.Draw(_data.PlayerSerpent.Camera);
+            Data.PlayingField.Draw(_data.PlayerSerpent.Camera);
             _data.PlayerSerpent.Draw(gameTime);
             foreach (var enemy in _data.Enemies)
                 enemy.Draw(gameTime);
